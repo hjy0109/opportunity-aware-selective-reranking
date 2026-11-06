@@ -1,6 +1,17 @@
 # Opportunity-Aware Selective Reranking for Efficient Biomedical Entity Linking
 
-Reference implementation and evaluation code for the paper under review.
+Reference implementation and evaluation code for the paper
+*Opportunity-Aware Selective Reranking for Efficient Biomedical Entity Linking*,
+Machine Learning for Health (ML4H) 2026, Proceedings of Machine Learning Research 346.
+
+**Authors:** JiYe Han<sup>1,2</sup>, Minkyoung Kim<sup>2,3</sup>, Young-Hak Kim<sup>4</sup>,
+Sanghyun Park<sup>3,\*</sup>, Tae Joon Jun<sup>2,\*</sup>
+
+<sup>1</sup> Department of Artificial Intelligence, Yonsei University, Republic of Korea<br>
+<sup>2</sup> Department of Information Medicine, Asan Medical Center, University of Ulsan College of Medicine, Republic of Korea<br>
+<sup>3</sup> Department of Computer Science, Yonsei University, Republic of Korea<br>
+<sup>4</sup> Division of Cardiology, Department of Internal Medicine, Asan Medical Center, University of Ulsan College of Medicine, Republic of Korea<br>
+<sup>\*</sup> Co-corresponding authors
 
 ## 1. What this is
 
@@ -109,8 +120,7 @@ the `full_reranking` cell of the same process, through `speedup_vs_full`.
 
 ## 6. Licensing
 
-`LICENSE.txt` covers this code: it is provided for peer review, and the licence
-under which it will be released is stated at publication.
+This code is released under the MIT License (`LICENSE.txt`).
 
 - **Nothing licensed is redistributed here** — no corpus, ontology, UMLS file,
   UMLS-derived resource or credential.
@@ -123,3 +133,7 @@ under which it will be released is stated at publication.
 - **ARR and ARTER** here are our own adaptations, written against the published
   descriptions; no code from either original repository is included. Cite the
   original papers for those methods.
+
+## 7. Citation
+
+A BibTeX entry will be added here once the ML4H 2026 proceedings are published.

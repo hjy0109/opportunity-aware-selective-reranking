@@ -1,21 +1,26 @@
-Copyright (c) 2026 The Authors.
+MIT License
 
-PEER REVIEW NOTICE
+Copyright (c) 2026 JiYe Han, Minkyoung Kim, Young-Hak Kim, Sanghyun Park,
+and Tae Joon Jun
 
-This code accompanies a manuscript under review. It is provided so that
-reviewers can read it and follow the procedure the manuscript reports.
-Permission is granted to use, copy and modify it for the purpose of reviewing
-that manuscript.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-No other rights are granted while the manuscript is under review. The code is
-not yet released under an open-source licence and is not for redistribution
-outside the review process.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-An open-source licence will be stated at publication and will replace this
-notice.
-
-The code is provided "as is", without warranty of any kind, express or implied.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 Third-party material: none is included here. Corpora, ontologies, UMLS
 resources and pretrained models are obtained by the user from their own
-sources and remain under their own terms; see section 14 of the README.
+sources and remain under their own terms; see section 6 of the README.
