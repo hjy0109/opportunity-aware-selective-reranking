@@ -1,7 +1,6 @@
 MIT License
 
-Copyright (c) 2026 JiYe Han, Minkyoung Kim, Young-Hak Kim, Sanghyun Park,
-and Tae Joon Jun
+Copyright (c) 2026 JiYe Han, Minkyoung Kim, Young-Hak Kim, Sanghyun Park, and Tae Joon Jun
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
