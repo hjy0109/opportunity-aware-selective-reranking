@@ -1,0 +1,69 @@
+key: MedMentions
+label: MedMentions ST21pv
+tag: medmentions
+
+corpus:
+  kind: medmentions_pubtator
+  # Obtained from https://github.com/chanzuckerberg/MedMentions (st21pv release).
+  files:
+    corpus: medmentions/st21pv/data/corpus_pubtator.txt.gz
+    train_pmids: medmentions/full/data/corpus_pubtator_pmids_trng.txt
+    dev_pmids: medmentions/full/data/corpus_pubtator_pmids_dev.txt
+    test_pmids: medmentions/full/data/corpus_pubtator_pmids_test.txt
+  splits: {train: train, dev: dev, test: test}
+
+knowledge_base:
+  kind: umls_st21pv
+  name: UMLS 2017AA, ST21pv subset
+  # User-supplied, licensed.  Not redistributed with this repository.
+  umls_meta: umls/2017AA/META      # MRCONSO.RRF, MRSTY.RRF
+  umls_net: umls/2017AA/NET        # SRDEF (semantic tree numbers)
+  # Documented for reference.  The effective lists live in src/data/ontology.py
+  # (ST21PV_TUIS, ST21PV_SABS); build_kb_from_umls() takes the two UMLS paths above
+  # and reads those constants, so editing the two lists below changes nothing.
+  semantic_types: [T005, T007, T017, T022, T031, T033, T037, T038, T058, T062,
+                   T074, T082, T091, T092, T097, T098, T103, T168, T170, T201, T204]
+  source_vocabularies: [CPT, FMA, GO, HGNC, HPO, ICD10, ICD10CM, ICD9CM, MDR, MSH,
+                        MTH, NCBI, NCI, NDDF, NDFRT, OMIM, RXNORM, SNOMEDCT_US]
+
+grouping:
+  key: document_id
+  description: document = PubMed abstract (PMID)
+
+# ARR baseline cost term: the per-route mean latencies used to build its utility
+# labels in the reported experiments.  Recorded per dataset because the values
+# differ, and because the label flips for mentions whose utility gain is close to
+# lambda_cost * (1 - stop / rerank).  `reranking_ms` here is the measured cost of
+# scoring the full 64-candidate pool, not the cost at K_high.
+# Input to the ARR baseline's utility labels: batch-amortised ms per mention.
+# `--route-latency measured` re-derives them from efficiency/ instead.
+arr_route_latency_ms:
+  retrieval: 4.30
+  reranking: 47.334
+  reranking_basis: full 64-candidate pool (not rescaled to K_high)
+
+# Per-dataset host values. `alpha`, `K_high` and `selected_hyperparameters` are
+# selections; the pipeline reads fusion/ and routing/ artefacts and checks them
+# against these. `select_depth` and `train --select` re-derive them.
+method_overrides:
+  retriever:
+    normalize: true                # cosine: L2-normalise, then inner product
+    similarity: cosine
+    aggregation: alias_topn_dedup  # global alias top-N, then de-duplicate to concepts
+    name_topn: 4096
+  reranker:
+    max_epochs: 12
+    n_look: 12                     # self-hard-negative re-mining depth; carried over
+                                   # from the sibling recipes, not recorded in the
+                                   # training summary of the reported run
+    internal_val: stored_flag      # reuses the stored train-only holdout (3,000 mentions)
+  fusion:
+    alpha: 0.375
+  candidate_depth:
+    K_high: 20
+  router:
+    selected_hyperparameters:
+      n_estimators: 600
+      max_depth: 6
+      learning_rate: 0.1
+      subsample: 1.0

@@ -1,0 +1,38 @@
+# Data, models and outputs are never committed.
+# Anchored to the repository root: an unanchored "data/" would also match the
+# src/data package.
+/data/
+/models/
+/outputs/
+/runs/
+wandb/
+mlruns/
+*.parquet
+*.npz
+*.npy
+*.safetensors
+*.bin
+*.pt
+*.ckpt
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Local environment
+.env
+.envrc
+.env.*
+*.pem
+*.key
+id_rsa*
+.netrc
+credentials*
+*.p12
+service-account*.json

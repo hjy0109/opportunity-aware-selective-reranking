@@ -1,0 +1,188 @@
+# Frozen method settings, shared by every dataset.
+#
+# These values are the ones used for the reported experiments.  A dataset config
+# may override only the fields listed in src/config.py:METHOD_OVERRIDABLE; the
+# rest are identical across datasets by construction.
+
+seeds:
+  backbone: 1              # retriever/cross-encoder/split seed
+  fold: 1                  # document-grouped 3-fold assignment
+  internal_val: 1          # train-internal validation holdout
+  router_random_state: 20260830
+  bootstrap: 20260823
+  dataloader: "numpy default_rng(seed * 1000 + epoch) permutation"
+
+retriever:
+  model: cambridgeltl/SapBERT-from-PubMedBERT-fulltext
+  finetuned: false
+  pooling: CLS
+  dtype: fp32
+  max_len: 32              # mention surface form only, no context, no Ab3P
+  encode_batch: 512
+  normalize: false         # per dataset; see dataset configs
+  similarity: inner product
+  aggregation: concept_max_streaming   # per dataset; or alias_topn_dedup
+  name_topn: 4096          # only used by alias_topn_dedup
+  k_pool: 64               # candidate pool cached per mention
+  rank_depth: 512          # depth at which the gold rank is still measured
+  name_block: 400000       # KB streaming block size (throughput only)
+  query_chunk: 2048        # query chunk size (throughput only)
+
+concept_representation:
+  name: R2
+  rule: "a1, or 'a1 [SEP] a2', from the two lowest-sorting distinct aliases"
+  sort_key: "(norm(alias), original_alias)"
+  normalisation: "strip -> collapse whitespace -> casefold"
+  separator: " [SEP] "
+  source: "aliases of the dataset knowledge base only"
+
+context:
+  source: "document title + body, mention sentence +/- 1 sentence"
+  sentence_pad: 1
+  max_context_tokens: 96
+  max_pair_tokens: 128
+  query_template: "Target mention: {mention}\nContext: {context}"
+  crop: "target-centred, balanced left/right; the mention span is never dropped"
+
+reranker:
+  backbone: microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext
+  head: AutoModelForSequenceClassification(num_labels=2)
+  objective: pointwise 2-way cross entropy
+  score: logit[1] - logit[0]
+  lr: 2.0e-5
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  scheduler: linear decay with warmup
+  batch_size: 64
+  grad_accum: 1
+  clip: 1.0
+  eval_batch: 256
+  precision: bf16 autocast (master/optimizer state fp32) + TF32
+  truncation: longest_first
+  max_epochs: 12
+  patience: 2
+  mine_every: 2
+  n_look: 24
+  n_keep: 2
+  negatives: "3 from rank 2-10, 3 from rank 11-64 (at least one deeper than 20), 2 self-hard"
+  positive: "the gold concept representation; injected when the gold is outside the pool"
+  selection: "train-internal-validation top-64 pool reranker-only Acc@1 (dev/test unused)"
+  tie_rule: earlier checkpoint
+  internal_val: document_holdout_10pct
+
+fusion:
+  formula: "(1 - alpha) * z(retrieval) + alpha * z(cross-encoder)"
+  alpha_grid: [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0]
+  alpha_selection: "train-internal-validation Acc@1 at K=64; ties go to the first grid value"
+  k_ref: 50                # depth at which the z statistics are estimated
+  k_select: 64             # depth at which alpha is selected
+  alpha: null              # frozen per-dataset value, see dataset configs
+  note: "alpha and the z statistics are estimated on train-internal validation only"
+
+candidate_depth:
+  K_grid: [1, 3, 5, 10, 20, 50, 64]
+  tolerance: 0.005         # 0.5 pp
+  rule: "smallest K whose dev Acc@1 is within 0.5 pp of the best fixed K"
+  selected_from_routing: false
+  K_high: null             # frozen per-dataset value, see dataset configs
+  cost_convention: "K <= 1 costs 0 cross-encoder pairs; K > 1 costs K pairs"
+
+features:
+  name: CURRENT8
+  list: [s1, margin_s1_s2, margin_s1_s5, std_top5, gap_s2_s3,
+         max_adj_gap_top5, near_top_count_top5, effective_competitor_count_top5]
+  tie_eps: 1.0e-6
+  standardisation: "z-scored with the training-split mean/sd, then frozen"
+  inputs: "retrieval score matrix only -- no gold, no cross-encoder, no context"
+
+targets:
+  HARD: "1[retriever top-1 != gold]"
+  OPP: "1[retriever top-1 != gold AND 1 < gold_rank <= K_high]"
+  BEN: "1[retriever top-1 != gold AND rerank@K_high == gold]  (diagnostic only)"
+  containment: "BEN subset of OPP subset of HARD"
+
+router:
+  family: XGB
+  implementation: "xgboost XGBClassifier, tree_method=hist, device=cpu"
+  grid:
+    n_estimators: [300, 600]
+    max_depth: [3, 6]
+    learning_rate: [0.03, 0.1]
+    subsample: [0.8, 1.0]
+  fixed:
+    tree_method: hist
+    device: cpu
+    n_jobs: 1
+    colsample_bytree: 1.0
+    eval_metric: logloss
+  class_balance: "scale_pos_weight = n_neg / n_pos"
+  selection_metric: "dev head-mean Acc@1 over q in {5, 10, 20, 30}%; ties go to dev OPP AUPRC"
+  selection_target: "OPP; the HARD router reuses the same hyperparameters"
+  fitted_on: train
+  selected_on: dev
+  selected_hyperparameters: null   # frozen per-dataset value, see dataset configs
+
+budget:
+  definition: "q = B / N, the normalised share of mentions that may be reranked"
+  q_grid: [0.0, 0.05, 0.10, 0.20, 0.30, 0.50, 0.75, 1.00]
+  q_head: [0.05, 0.10, 0.20, 0.30]
+  q_representative: 0.10
+  selection: "n_selected = round(q * N), descending stable argsort, ties keep pool order"
+  unselected: "keep the retriever top-1 prediction"
+
+statistics:
+  bootstrap: document/source-clustered paired bootstrap
+  n_boot: 2000
+  seed: 20260823
+  interval: 95% percentile
+  primary_contrast: Opportunity vs Difficulty at matched q
+
+latency:
+  regime: batch=1 online
+  warmup: 3
+  timed_reps: 9
+  statistic: median over timed repetitions
+  synchronise: "torch.cuda.synchronize() around every timed stage"
+  excluded: "model and index loading (offline setup), measured separately"
+  included: "retrieval, routing features, router inference, routing decision, conditional reranking, fusion"
+  unit: ms per mention
+  sample_seed: 20260905
+
+baselines:
+  margin:
+    definition: "routing score = -margin_s1_s2 (smaller retrieval margin reranked first)"
+  random:
+    replicates: 20
+    # Recorded here for reference; the draws are seeded from seeds.bootstrap, which
+    # src.evaluation.evaluate passes in.  The two values are kept in step.
+    seed: 20260823
+  arr:
+    router_lm: bert-base-uncased
+    num_labels: 2
+    lr: 3.0e-5
+    epochs: 20
+    batch: 32
+    max_len: 256
+    val_frac: 0.25
+    seed: 20260830
+    utility: "0.5 * nDCG@10 + 0.5 * MRR@10 minus lambda_cost * normalised latency"
+    lambda_cost: 0.05
+    eval_at_k: 10
+    training_data: minority-class down-sampled
+    checkpoint_rule: "highest accuracy on the 25% validation split of the down-sampled train set"
+  arter:
+    encoder: cambridgeltl/SapBERT-from-PubMedBERT-fulltext
+    top_m: 10
+    ctx_max_len: 128
+    mention_max_len: 32
+    entity_max_len: 32
+    batch: 256
+    penalized: "(theta1 + theta2 - theta3) / 2"
+    entropy: "base-2 Shannon over p_i = (s_i - min) / sum(s - min) on the top-10 retrieval scores"
+    features: [penalized_top1, penalized_top2, penalized_margin,
+               avg_theta1, avg_theta2, avg_theta3, entropy_top10, sent_len]
+    rf:
+      n_estimators: 100
+      random_state: 20260830
+    threshold_rule: "dev Youden J (the native ARTER rule)"
+    target: HARD

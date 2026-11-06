@@ -1,0 +1,56 @@
+key: bc5cdr-disease
+label: BC5CDR-Disease
+tag: bc5cdr_disease
+
+corpus:
+  kind: bioc
+  # BioC XML, one file per split, as produced by the BioC preprocessing described
+  # in the README (composite and non-contiguous annotations already removed).
+  files:
+    train: corpora/bc5cdr_train.bioc.xml.gz
+    dev: corpora/bc5cdr_val.bioc.xml.gz
+    test: corpora/bc5cdr_test.bioc.xml.gz
+  # Entity types are restored from the original CDR release, because the BioC
+  # preprocessing does not keep the annotation type.
+  entity_type_source: corpora_sources/CDR_Data/CDR.Corpus.v010516
+  mention_type: disease
+
+knowledge_base:
+  kind: ontology_json
+  name: MeSH 2015, type = disease
+  ontology: ontologies/mesh2015.json.gz
+  type_map: ontologies/mesh2015_types.json
+  universe_type: disease
+  # Recorded for reference; the code always builds from the full ontology above.
+  biosyn_extended_dictionary: false   # the released extended dictionary adds train/dev
+                                      # mentions, so the full ontology is used instead
+
+grouping:
+  key: document_id
+  description: document = PMID
+
+# Input to the ARR baseline's utility labels: batch-amortised ms per mention.
+# `--route-latency measured` re-derives them from efficiency/ instead.
+arr_route_latency_ms:
+  retrieval: 0.07
+  reranking: 38.918
+  reranking_basis: full 64-candidate pool (not rescaled to K_high)
+
+# Per-dataset host values. `alpha`, `K_high` and `selected_hyperparameters` are
+# selections; the pipeline reads fusion/ and routing/ artefacts and checks them
+# against these. `select_depth` and `train --select` re-derive them.
+method_overrides:
+  retriever:
+    normalize: false
+    similarity: inner product
+    aggregation: concept_max_streaming
+  fusion:
+    alpha: 0.375
+  candidate_depth:
+    K_high: 20
+  router:
+    selected_hyperparameters:
+      n_estimators: 300
+      max_depth: 6
+      learning_rate: 0.1
+      subsample: 0.8

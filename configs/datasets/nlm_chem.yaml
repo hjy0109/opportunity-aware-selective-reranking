@@ -1,0 +1,54 @@
+key: nlm-chem
+label: NLM-Chem
+tag: nlm_chem
+
+corpus:
+  kind: bioc
+  files:
+    train: corpora/nlmchem_train.bioc.xml.gz
+    dev: corpora/nlmchem_val.bioc.xml.gz
+    test: corpora/nlmchem_test.bioc.xml.gz
+  mention_type: null
+
+knowledge_base:
+  kind: ontology_json
+  name: MeSH 2021, type = chemical
+  ontology: ontologies/mesh2021.json.gz
+  type_map: ontologies/mesh2021_types.json
+  universe_type: chemical
+  # Recorded for reference; the code always builds from the full ontology above.
+  biosyn_extended_dictionary: false
+
+grouping:
+  key: document_id
+  description: document = PMC full-text article
+
+# Note: unlike the other three datasets, this dataset's reported ARR run rescaled
+# the measured top-64 cost (33.8868 ms) to the deployed depth K_high = 20.  The
+# inconsistency is in the original experiments and is preserved rather than
+# harmonised, so that the released code reproduces the labels that were used.
+# Input to the ARR baseline's utility labels: batch-amortised ms per mention.
+# `--route-latency measured` re-derives them from efficiency/ instead.
+arr_route_latency_ms:
+  retrieval: 0.2234
+  reranking: 10.5896
+  reranking_basis: top-64 measurement (33.8868 ms) rescaled to K_high
+
+# Per-dataset host values. `alpha`, `K_high` and `selected_hyperparameters` are
+# selections; the pipeline reads fusion/ and routing/ artefacts and checks them
+# against these. `select_depth` and `train --select` re-derive them.
+method_overrides:
+  retriever:
+    normalize: false
+    similarity: inner product
+    aggregation: concept_max_streaming
+  fusion:
+    alpha: 0.375
+  candidate_depth:
+    K_high: 20
+  router:
+    selected_hyperparameters:
+      n_estimators: 600
+      max_depth: 6
+      learning_rate: 0.1
+      subsample: 0.8

@@ -1,0 +1,50 @@
+key: ncbi-disease
+label: NCBI Disease
+tag: ncbi_disease
+
+corpus:
+  kind: bioc
+  files:
+    train: corpora/ncbidisease_train.bioc.xml.gz
+    dev: corpora/ncbidisease_val.bioc.xml.gz
+    test: corpora/ncbidisease_test.bioc.xml.gz
+  mention_type: null            # no type filter for this corpus
+
+knowledge_base:
+  kind: ontology_json
+  name: MEDIC (MeSH + OMIM disease)
+  ontology: ontologies/medic.json.gz
+  type_map: null
+  universe_type: null
+  # Recorded for reference; the code always builds from the full ontology above.
+  biosyn_extended_dictionary: false
+
+grouping:
+  key: document_id
+  description: document = PubMed abstract (PMID)
+
+# Input to the ARR baseline's utility labels: batch-amortised ms per mention.
+# `--route-latency measured` re-derives them from efficiency/ instead.
+arr_route_latency_ms:
+  retrieval: 0.07
+  reranking: 40.602
+  reranking_basis: full 64-candidate pool (not rescaled to K_high)
+
+# Per-dataset host values. `alpha`, `K_high` and `selected_hyperparameters` are
+# selections; the pipeline reads fusion/ and routing/ artefacts and checks them
+# against these. `select_depth` and `train --select` re-derive them.
+method_overrides:
+  retriever:
+    normalize: false
+    similarity: inner product
+    aggregation: concept_max_streaming
+  fusion:
+    alpha: 0.5
+  candidate_depth:
+    K_high: 50
+  router:
+    selected_hyperparameters:
+      n_estimators: 300
+      max_depth: 3
+      learning_rate: 0.1
+      subsample: 1.0

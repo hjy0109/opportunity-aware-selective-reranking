@@ -1,0 +1,13 @@
+# Versions are those of the environment in which the reported experiments were run.
+# Python 3.12.3
+torch==2.5.1              # installed as the +cu121 build; see README "Installation"
+transformers==4.51.3
+numpy==2.5.2
+pandas==3.0.5
+scipy==1.18.0
+scikit-learn==1.9.0
+pyarrow==25.0.1
+xgboost-cpu==3.4.1        # CPU-only build: the routers were fitted with device="cpu"
+bioc==2.1                 # BioC XML reader, used only by the BioC dataset preparation
+PyYAML==6.0.3
+tqdm==4.70.0
